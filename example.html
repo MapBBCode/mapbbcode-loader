@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<meta charset="utf-8"/>
+<script src="MapBBCodeLoader.js"></script>
+<script>
+mapBBCodeLoaderOptions.set({
+	language: 'ru',
+	proprietary: ['Google'],
+	plain: true,
+	mapBBCodeOptions: {
+		layers: 'OpenMapSurfer,Google Roads'
+	}
+});
+</script>
+[map][/map]
+<div class="mapbbcode" map="13">60,30</div>
+<div class="mapbbcode">[map=8]59,29[/map]</div>
+test[map=15]59.95,30.4[/map]inline[map=16]59.95,30.4[/map]end
+<hr>
+<div class="mapbbcode_shared">nwrxs</div>
+[mapid]nwrxs[/mapid]
+<hr>
+<input type="button" value="Edit map" class="mapbbcode_edit">
+<input type="button" value="Update" onclick="javascript:document.getElementById('edited').innerHTML = document.getElementById('textarea').value; updateMapBBCode(document.getElementById('edited'));">
+<br>
+<textarea id="textarea" rows="3" cols="60">[map=15]59.95,30.4[/map]</textarea>
+<div id="edited" class="mapbbcode"></div>

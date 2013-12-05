@@ -1,0 +1,283 @@
+/*
+ * MapBBCode UI Loader.
+ * A single script that, being included in a page, replaces all map bbcodes with maps.
+ * And adds a map window opener to some buttons.
+ * But first of all, it loads all Leaflet and MapBBCode scripts and stylesheets.
+ */
+
+window.mapBBCodeLoaderOptions = {
+	path: 'mapbbcode/', // relative or absolute path to leaflet and mapbbcode libraries
+	language: '', // put actual lang file name (without .js)
+	addons: [], // array of strings for addons (paths to js files relative to mapbbcode path)
+	proprietary: [], // array of proprietary layer names (without js)
+	plain: false, // if true, converts plain bbcode to maps, otherwise only processes divs
+
+	mapBBCodeOptions: {},
+	processorOptions: {},
+	// note: only [] brackets are supported for plain codes and [mapid]!
+
+	set: function( options ) {
+		var opt;
+		for( opt in options ) {
+			if( options.hasOwnProperty(opt) && this.hasOwnProperty(opt) )
+				this[opt] = options[opt];
+		}
+	}
+};
+
+(function(window, document) {
+	// 1. add leaflet scripts and wait for their loading
+	// 2. add mapbbcode scripts (with options.addons) and wait for their loading
+	// 3. create mapbbcode object (with options.mapbbcodeOptions)
+	// 4. scan page for <div class="mapbbcode" /> and replace them with mapbbcode
+	// 5. the same for <div class="mapbbcode_shared" />
+	// 6. if options.plain, scan and replace [map] and [mapid]
+	// 7. add onclick handler to <input type="button" class="mapbbcode_edit"> or <button>,
+	//    which opens mapbbcode editor for a textarea identified with "target_id" attribute
+	
+	function findByClass( root, className, tagNames ) {
+		var result = [], i, j, node = root || document, elements,
+			pattern = new RegExp('(?:^|\\s)' + className + '(?:\\s|$)');
+		if( root.className && pattern.test(root.className) )
+			return [root];
+		if( node.getElementsByClassName ) {
+			elements = node.getElementsByClassName(className);
+			for( i = 0; i < elements.length; i++ ) {
+				for( j = 0; j < tagNames.length; j++ )
+					if( elements[i].nodeName == tagNames[j] )
+						result.push(elements[i]);
+			}
+		} else {
+			elements = [];
+			for( i = 0; i < tagNames.length; i++ )
+				elements = elements.concat(node.getElementsByTagName(tagNames[i]));
+			for( i = 0; i < elements.length; i++ ) {
+				if( pattern.test(elements[i].className) )
+					result.push(elements[i]);
+			}
+		}
+		return result;
+	}
+
+	function findTextWithMapBBCode(root) {
+		var result = [];
+		(function scanSubTree(node) {
+			if( node.childNodes.length ) {
+				for( var i = 0; i < node.childNodes.length; i++ )
+					if( (!('tagName' in node) || node.tagName != 'TEXTAREA') && (!('className' in node) || node.className.indexOf('mapbbcode') < 0) )
+						scanSubTree(node.childNodes[i]);
+			} else if( node.nodeType == Node.TEXT_NODE ) {
+				if( node.nodeValue.indexOf('[/map]') >= 0 || node.nodeValue.indexOf('[mapid]') >= 0 )
+					result.push(node);
+			}
+		})(root || document);
+		return result;
+	}
+
+	function encloseInDiv( textNode, pos, length, className ) {
+		var el = document.createElement('div'),
+			secondPart = textNode.splitText(pos),
+			thirdPart = secondPart.splitText(length);
+		el.className = className;
+		secondPart.parentNode.insertBefore(el, secondPart);
+		el.appendChild(secondPart);
+		return thirdPart;
+	}
+
+	function wrapBBCodeInDivs(root) {
+		var nodes = findTextWithMapBBCode(root);
+		if( nodes.length > 0 ) {
+			var re = new RegExp(window.MapBBCodeProcessor.getBBCodeRegExp().source, 'gi'),
+				reShared = new RegExp('\\[mapid\\]\\s*[a-z]+\\s*\\[/mapid\\]', 'gi');
+			for( var j = 0; j < nodes.length; j++ ) {
+				var node = nodes[j], m, ms;
+				while( true ) {
+					m = re.exec(node.nodeValue);
+					ms = reShared.exec(node.nodeValue);
+					if( m && m.length > 0 ) {
+						if( !window.MapBBCodeProcessor.isEmpty(m[0]) ) { // do not process [map][/map]
+							node = encloseInDiv(node, m.index, m[0].length, 'mapbbcode');
+							re.lastIndex = 0;
+							reShared.lastIndex = 0;
+						}
+					} else if( ms && ms.length > 0 ) {
+						node = encloseInDiv(node, ms.index, ms[0].length, 'mapbbcode_shared');
+						re.lastIndex = 0;
+						reShared.lastIndex = 0;
+					} else
+						break;
+				}
+			}
+		}
+	}
+
+	// find all bbcodes not inside mapbbcode class and enclose them with <div class="mapbbcode"></div> (or "mapbbcode_shared")
+	function eachMap( root, callback ) {
+		if( window.mapBBCodeLoaderOptions.plain ) {
+			if( 'MapBBCodeProcessor' in window ) {
+				wrapBBCodeInDivs(root);
+			} else {
+				// no need to wrap anything: just ping callback if we found something
+				var nodes = findTextWithMapBBCode(root);
+				if( nodes.length > 0 )
+					callback.call(this, {});
+			}
+		}
+
+		var mapbbcodes = findByClass(root, 'mapbbcode', ['DIV']), i, cn, r;
+		for( i = 0; i < mapbbcodes.length; i++ ) {
+			cn = mapbbcodes[i].childNodes;
+			if( cn && cn.length > 0 && (cn[0].tagName == 'DIV' || (cn.length > 1 && cn[1].tagName == 'DIV')) )
+				continue;
+			r = callback.call(this, {
+				shared: false,
+				element: mapbbcodes[i]
+			});
+			if( r ) return;
+		}
+
+		mapbbcodes = findByClass(root, 'mapbbcode_shared', ['DIV']);
+		for( i = 0; i < mapbbcodes.length; i++ ) {
+			cn = mapbbcodes[i].childNodes;
+			if( cn && cn.length > 0 && (cn[0].tagName == 'DIV' || (cn.length > 1 && cn[1].tagName == 'DIV')) )
+				continue;
+			var id = /^\s*(?:\[mapid\]\s*)?([a-z]+)(?:\s*\[\/mapid\])?\s*$/.exec(mapbbcodes[i].innerHTML);
+			if( id && id.length > 1 ) {
+				r = callback.call(this, {
+					shared: true,
+					id: id[1],
+					element: mapbbcodes[i]
+				});
+				if( r ) return;
+			}
+		}
+
+		buttons = findByClass(root, 'mapbbcode_edit', ['INPUT', 'BUTTON']);
+		for( i = 0; i < buttons.length; i++ ) {
+			var targetEl;
+			if( buttons[i].getAttribute('target_id') )
+				targetEl = document.getElementsById(buttons[i].getAttribute('target_id'));
+			if( !targetEl ) {
+				var textArea = document.getElementsByTagName('TEXTAREA');
+				if( textArea && textArea.length > 0 )
+					targetEl = textArea[0];
+			}
+			r = callback.call(this, {
+				button: true,
+				target: targetEl,
+				element: buttons[i]
+			});
+			if( r ) return;
+		}
+	}
+
+	function normalizeName( name, expandLanguage ) {
+		if( !name || !name.length )
+			return name;
+		name = name.replace(/^\s+|\s+$/g, '').replace(/\.js$/, '');
+		if( name.length <= 1 )
+			return name.toUpperCase();
+		name = name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase();
+		if( expandLanguage ) {
+			var first2 = name.substring(0, 2);
+			if( first2 == 'En' )
+				name = 'English';
+			else if( first2 == 'Ru' )
+				name = 'Russian';
+		}
+		return name;
+	}
+
+	var loadingCount = 0, timeoutId, timeoutCount = 50;
+	
+	function appendFile( url, callback ) {
+		var el, head = document.head || document.getElementsByTagName('head')[0];
+		if( url.substring(url.length - 3) == 'css' ) {
+			el = document.createElement('link');
+			el.rel = 'stylesheet';
+			el.type = 'text/css';
+			el.href = url;
+		} else {
+			el = document.createElement('script');
+			el.type = 'text/javascript';
+			el.async = true;
+			el.src = url;
+			var already = false;
+			el.onload = el.onreadystatechange = el.onerror = function() {
+				if( !already && (!el.readyState || /loaded|complete/.test(el.readyState)) ) {
+					already = true;
+					el.onload = el.onreadystatechange = null;
+					loadingCount--;
+					if( callback ) callback();
+				}
+			};
+			loadingCount++;
+		}
+		head.appendChild(el);
+	}
+
+	function init() {
+		// if there are no maps on page, do not do anything
+		var found = false;
+		eachMap(document, function() { found = true; return true; }); // find the first map
+		if( !found ) return;
+
+		// add css and scripts
+		var options = window.mapBBCodeLoaderOptions;
+		var path = options.path || '.';
+		if( path.substring(path.length - 1) !== '/' )
+			path += '/';
+		options.mapBBCodeOptions.windowPath = path;
+
+		appendFile(path + 'leaflet.css');
+		if( 'ActiveXObject' in window && !document.addEventListener ) // ie8, to remove for leaflet 0.7
+			appendFile(path + 'leaflet.ie.css');
+
+		appendFile(path + 'leaflet.js', function() {
+			appendFile(path + 'mapbbcode.js', function() {
+				var i, lang = normalizeName(options.language, true);
+				if( lang && lang.length > 1 )
+					appendFile(path + 'lang/' + lang + '.js');
+				if( options.proprietary.length > 0 || options.mapBBCodeOptions.layers ) {
+					appendFile(path + 'LayerList.js');
+					for( i = 0; i < options.proprietary.length; i++ )
+						appendFile(path + 'proprietary/' + normalizeName(options.proprietary[i]) + '.js');
+				}
+				for( i = 0; i < options.addons.length; i++ )
+					appendFile(path + options.addons[i]);
+
+				// now wait
+				timeoutId = window.setInterval(step2, 100);
+			});
+		});
+	}
+
+	function step2() {
+		if( loadingCount > 0 && --timeoutCount > 0 ) return;
+		window.clearInterval(timeoutId);
+
+		var options = window.mapBBCodeLoaderOptions;
+		window.MapBBCodeProcessor.setOptions(options.processorOptions);
+		window._mapBBCode = new window.MapBBCode(options.mapBBCodeOptions);
+		window.updateMapBBCode();
+	}
+
+	function update( root ) {
+		eachMap(root || document, function(c) {
+			var mapBBCode = window._mapBBCode;
+			if( c.button ) {
+				var onclick = function() {
+					mapBBCode.editorWindow(c.target);
+				};
+				if( c.element.addEventListener ) c.element.addEventListener('click', onclick); else c.element.attachEvent('onclick', onclick);
+			} else if( !c.shared ) {
+				mapBBCode.show(c.element);
+			} else {
+				mapBBCode.showExternal(c.element, c.id);
+			}
+		});
+	}
+
+	window.updateMapBBCode = update;
+	if( window.addEventListener ) window.addEventListener('load', init, false); else window.attachEvent('onload', init);
+})(window, document);
