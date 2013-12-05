@@ -85,10 +85,10 @@ If everything else fails, you will have to set `plain` option to `true`. This is
 This is simple. Find a header template (usually with `head` in a file name, or that includes `<head>` tag; there might be more than one) and right before `</head>` closing tag add those lines:
 
 ```html
-<script src="MapBBCodeLoader.min.js"></script>
+<script src="/js/mapbbcode/MapBBCodeLoader.min.js"></script>
 <script>
 window.MapBBCodeLoaderOptions.set({
-	path: '/lib/mapbbcode/',
+	path: '/js/mapbbcode/',
 	mapBBCodeOptions: {
 		fullFromStart: true,
 		fullViewHeight: 300
