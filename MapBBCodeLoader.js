@@ -35,6 +35,7 @@ window.mapBBCodeLoaderOptions = {
 	// 7. add onclick handler to <input type="button" class="mapbbcode_edit"> or <button>,
 	//    which opens mapbbcode editor for a textarea identified with "target_id" attribute
 	
+	// find sub-elements of root with given class name and tag names
 	function findByClass( root, className, tagNames ) {
 		var result = [], i, j, node = root || document, elements,
 			pattern = new RegExp('(?:^|\\s)' + className + '(?:\\s|$)');
@@ -59,6 +60,7 @@ window.mapBBCodeLoaderOptions = {
 		return result;
 	}
 
+	// finds all text nodes that look like mapbbcode
 	function findTextWithMapBBCode(root) {
 		var result = [];
 		(function scanSubTree(node) {
@@ -74,6 +76,7 @@ window.mapBBCodeLoaderOptions = {
 		return result;
 	}
 
+	// encloses part of a text node in a div with given class name
 	function encloseInDiv( textNode, pos, length, className ) {
 		var el = document.createElement('div'),
 			secondPart = textNode.splitText(pos),
@@ -84,46 +87,47 @@ window.mapBBCodeLoaderOptions = {
 		return thirdPart;
 	}
 
-	function wrapBBCodeInDivs(root) {
-		var nodes = findTextWithMapBBCode(root);
-		if( nodes.length > 0 ) {
-			var re = new RegExp(window.MapBBCodeProcessor.getBBCodeRegExp().source, 'gi'),
-				reShared = new RegExp('\\[mapid\\]\\s*[a-z]+\\s*\\[/mapid\\]', 'gi');
-			for( var j = 0; j < nodes.length; j++ ) {
-				var node = nodes[j], m, ms;
-				while( true ) {
-					m = re.exec(node.nodeValue);
-					ms = reShared.exec(node.nodeValue);
-					if( m && m.length > 0 ) {
-						if( !window.MapBBCodeProcessor.isEmpty(m[0]) ) { // do not process [map][/map]
-							node = encloseInDiv(node, m.index, m[0].length, 'mapbbcode');
-							re.lastIndex = 0;
-							reShared.lastIndex = 0;
-						}
-					} else if( ms && ms.length > 0 ) {
-						node = encloseInDiv(node, ms.index, ms[0].length, 'mapbbcode_shared');
+	// processes [non-empty!] array of text nodes, enclosing all valid non-empty bbcodes in a div
+	function wrapBBCodeInDivs(nodes) {
+		var re = new RegExp(window.MapBBCodeProcessor.getBBCodeRegExp().source, 'gi'),
+			reShared = new RegExp('\\[mapid\\]\\s*[a-z]+\\s*\\[/mapid\\]', 'gi');
+		for( var j = 0; j < nodes.length; j++ ) {
+			var node = nodes[j], m, ms;
+			while( true ) {
+				m = re.exec(node.nodeValue);
+				ms = reShared.exec(node.nodeValue);
+				if( m && m.length > 0 ) {
+					if( !window.MapBBCodeProcessor.isEmpty(m[0]) ) { // do not process [map][/map]
+						node = encloseInDiv(node, m.index, m[0].length, 'mapbbcode');
 						re.lastIndex = 0;
 						reShared.lastIndex = 0;
-					} else
-						break;
-				}
+					}
+				} else if( ms && ms.length > 0 ) {
+					node = encloseInDiv(node, ms.index, ms[0].length, 'mapbbcode_shared');
+					re.lastIndex = 0;
+					reShared.lastIndex = 0;
+				} else
+					break;
 			}
 		}
 	}
 
-	// find all bbcodes not inside mapbbcode class and enclose them with <div class="mapbbcode"></div> (or "mapbbcode_shared")
+	// iterates over every instance of mapbbcode*, calling callback function with an object { button?, shared?, element, ... }
 	function eachMap( root, callback ) {
 		if( window.mapBBCodeLoaderOptions.plain ) {
-			if( 'MapBBCodeProcessor' in window ) {
-				wrapBBCodeInDivs(root);
-			} else {
-				// no need to wrap anything: just ping callback if we found something
-				var nodes = findTextWithMapBBCode(root);
-				if( nodes.length > 0 )
+			// first wrap all not already enclosed bbcode in divs
+			var nodes = findTextWithMapBBCode(root);
+			if( nodes.length > 0 ) {
+				if( 'MapBBCodeProcessor' in window ) {
+					wrapBBCodeInDivs(nodes);
+				} else {
+					// no need to wrap anything: just ping callback if we found something
 					callback.call(this, {});
+				}
 			}
 		}
 
+		// <div class="mapbbcode">...</div>
 		var mapbbcodes = findByClass(root, 'mapbbcode', ['DIV']), i, cn, r;
 		for( i = 0; i < mapbbcodes.length; i++ ) {
 			cn = mapbbcodes[i].childNodes;
@@ -136,6 +140,7 @@ window.mapBBCodeLoaderOptions = {
 			if( r ) return;
 		}
 
+		// <div class="mapbbcode_shared">abcde</div>
 		mapbbcodes = findByClass(root, 'mapbbcode_shared', ['DIV']);
 		for( i = 0; i < mapbbcodes.length; i++ ) {
 			cn = mapbbcodes[i].childNodes;
@@ -152,6 +157,7 @@ window.mapBBCodeLoaderOptions = {
 			}
 		}
 
+		// <input type="button" class="mapbbcode_edit" target_id="..." />
 		buttons = findByClass(root, 'mapbbcode_edit', ['INPUT', 'BUTTON']);
 		for( i = 0; i < buttons.length; i++ ) {
 			var targetEl;
@@ -171,6 +177,7 @@ window.mapBBCodeLoaderOptions = {
 		}
 	}
 
+	// fixes script case to "Ulower", also expands language name
 	function normalizeName( name, expandLanguage ) {
 		if( !name || !name.length )
 			return name;
@@ -188,8 +195,11 @@ window.mapBBCodeLoaderOptions = {
 		return name;
 	}
 
-	var loadingCount = 0, timeoutId, timeoutCount = 50;
+	var loadingCount = 0, // number of scripts currently loading
+		timeoutId, // id of a timeout that waits for scripts
+		timeoutCount = 50; // number of step2() calls after which it should give up
 	
+	// appends a script of a css file. Calls callback after script was loaded
 	function appendFile( url, callback ) {
 		var el, head = document.head || document.getElementsByTagName('head')[0];
 		if( url.substring(url.length - 3) == 'css' ) {
@@ -244,6 +254,7 @@ window.mapBBCodeLoaderOptions = {
 			appendFile(path + 'leaflet.ie.css');
 
 		appendFile(path + 'leaflet.js', function() {
+			// note that we don't include leaflet.draw.js - it is not needed
 			appendFile(path + 'mapbbcode.js', function() {
 				var i, lang = normalizeName(options.language, true);
 				if( lang && lang.length > 1 )
@@ -262,6 +273,7 @@ window.mapBBCodeLoaderOptions = {
 		});
 	}
 
+	// on IE8 there is no addEventListener
 	function addListener( obj, name, listener ) {
 		if( obj.addEventListener )
 			obj.addEventListener(name, listener, false);
@@ -269,6 +281,7 @@ window.mapBBCodeLoaderOptions = {
 			obj.attachEvent('on' + name, listener);
 	}
 
+	// actually replace bbcodes with maps. Can be called with a root element
 	function update( root ) {
 		eachMap(root || document, function(c) {
 			var mapBBCode = window._mapBBCode;
@@ -284,6 +297,7 @@ window.mapBBCodeLoaderOptions = {
 		});
 	}
 
+	// checks that all scripts have finished loading and initializes MapBBCode object, then calling update()
 	function step2() {
 		if( loadingCount > 0 && --timeoutCount > 0 ) return;
 		window.clearInterval(timeoutId);
@@ -295,6 +309,7 @@ window.mapBBCodeLoaderOptions = {
 		update();
 	}
 
+	// process the page only after it has finished loading
 	if( document.readyState == 'interactive' || document.readyState == 'complete' )
 		init();
 	else
