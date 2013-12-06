@@ -59,7 +59,9 @@ Now let's make a MapBBCode editor:
 
 When a cursor in a textarea is placed inside a [map] bbcode string, the button opens an editing window for that code, empty otherwise. When "Apply" button is clicked in that window, updated code is inserted at the cursor's location. As you can see, the button and the textarea are linked with `target_id` attribute.
 
-See an extended example of using the loader in `example.html`.
+You can update one or all of maps when the content of divs is updated, using `window.updateMapBBCode()` function. Do not try to call it while a page is loading: it is initialized after all bbcodes are turned into maps.
+
+See an extended example of using the loader in [example.html](example.html).
 
 ## Embedding in a forum or blog
 
@@ -90,8 +92,8 @@ This is simple. Find a header template (usually with `head` in a file name, or t
 window.MapBBCodeLoaderOptions.set({
 	path: '/js/mapbbcode/',
 	mapBBCodeOptions: {
-		fullFromStart: true,
-		fullViewHeight: 300
+		layers: 'OpenMapSurfer,OpenStreetMap',
+		uploadButton: true
 	}
 });
 </script>
