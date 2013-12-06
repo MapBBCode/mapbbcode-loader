@@ -197,7 +197,7 @@ window.mapBBCodeLoaderOptions = {
 
 	var loadingCount = 0, // number of scripts currently loading
 		timeoutId, // id of a timeout that waits for scripts
-		timeoutCount = 50; // number of step2() calls after which it should give up
+		timeoutCount = 60; // number of step2() calls after which it should give up
 	
 	// appends a script of a css file. Calls callback after script was loaded
 	function appendFile( url, callback ) {
@@ -268,7 +268,7 @@ window.mapBBCodeLoaderOptions = {
 					appendFile(path + options.addons[i]);
 
 				// now wait
-				timeoutId = window.setInterval(step2, 100);
+				timeoutId = window.setInterval(step2, 50);
 			});
 		});
 	}
@@ -312,6 +312,19 @@ window.mapBBCodeLoaderOptions = {
 	// process the page only after it has finished loading
 	if( document.readyState == 'interactive' || document.readyState == 'complete' )
 		init();
-	else
-		addListener(window, 'load', init);
+	else if( document.addEventListener )
+		document.addEventListener('DOMContentLoaded', init, false);
+	else {
+		// IE 8
+		(function() {
+			var checkLoad = function() {
+				if( document.readyState != 'interactive' && document.readyState != 'complete' )
+					setTimeout(checkLoad, 50);
+				else
+					init();
+			};
+			checkLoad();
+		})();
+	}
+
 })(window, document);
