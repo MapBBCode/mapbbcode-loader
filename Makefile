@@ -7,3 +7,7 @@ download:
 	rm -rf mapbbcode
 	unzip mapbbcode-latest.zip
 	rm mapbbcode-latest.zip
+
+npm:
+	npm install -g jshint
+	npm install -g uglify-js

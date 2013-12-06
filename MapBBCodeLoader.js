@@ -216,11 +216,21 @@ window.mapBBCodeLoaderOptions = {
 		head.appendChild(el);
 	}
 
+	var initialized = false;
+
 	function init() {
 		// if there are no maps on page, do not do anything
 		var found = false;
 		eachMap(document, function() { found = true; return true; }); // find the first map
 		if( !found ) return;
+
+		// prevent double initialization
+		if( initialized || 'MapBBCode' in window ) {
+			if( 'updateMapBBCode' in window )
+				window.updateMapBBCode(); // just in case
+			return;
+		}
+		initialized = true;
 
 		// add css and scripts
 		var options = window.mapBBCodeLoaderOptions;
@@ -252,24 +262,20 @@ window.mapBBCodeLoaderOptions = {
 		});
 	}
 
-	function step2() {
-		if( loadingCount > 0 && --timeoutCount > 0 ) return;
-		window.clearInterval(timeoutId);
-
-		var options = window.mapBBCodeLoaderOptions;
-		window.MapBBCodeProcessor.setOptions(options.processorOptions);
-		window._mapBBCode = new window.MapBBCode(options.mapBBCodeOptions);
-		window.updateMapBBCode();
+	function addListener( obj, name, listener ) {
+		if( obj.addEventListener )
+			obj.addEventListener(name, listener, false);
+		else if( obj.attachEvent )
+			obj.attachEvent('on' + name, listener);
 	}
 
 	function update( root ) {
 		eachMap(root || document, function(c) {
 			var mapBBCode = window._mapBBCode;
 			if( c.button ) {
-				var onclick = function() {
+				addListener(c.element, 'click', function() {
 					mapBBCode.editorWindow(c.target);
-				};
-				if( c.element.addEventListener ) c.element.addEventListener('click', onclick); else c.element.attachEvent('onclick', onclick);
+				});
 			} else if( !c.shared ) {
 				mapBBCode.show(c.element);
 			} else {
@@ -278,6 +284,19 @@ window.mapBBCodeLoaderOptions = {
 		});
 	}
 
-	window.updateMapBBCode = update;
-	if( window.addEventListener ) window.addEventListener('load', init, false); else window.attachEvent('onload', init);
+	function step2() {
+		if( loadingCount > 0 && --timeoutCount > 0 ) return;
+		window.clearInterval(timeoutId);
+
+		var options = window.mapBBCodeLoaderOptions;
+		window.MapBBCodeProcessor.setOptions(options.processorOptions);
+		window._mapBBCode = new window.MapBBCode(options.mapBBCodeOptions);
+		window.updateMapBBCode = update;
+		update();
+	}
+
+	if( document.readyState == 'interactive' || document.readyState == 'complete' )
+		init();
+	else
+		addListener(window, 'load', init);
 })(window, document);
