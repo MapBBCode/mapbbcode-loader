@@ -316,15 +316,13 @@ window.mapBBCodeLoaderOptions = {
 		document.addEventListener('DOMContentLoaded', init, false);
 	else {
 		// IE 8
-		(function() {
-			var checkLoad = function() {
-				if( document.readyState != 'interactive' && document.readyState != 'complete' )
-					setTimeout(checkLoad, 50);
-				else
-					init();
-			};
-			checkLoad();
-		})();
+		var checkLoad = function() {
+			if( document.readyState != 'interactive' && document.readyState != 'complete' )
+				setTimeout(checkLoad, 50);
+			else
+				init();
+		};
+		checkLoad();
 	}
 
 })(window, document);
