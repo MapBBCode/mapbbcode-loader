@@ -61,7 +61,7 @@ When a cursor in a textarea is placed inside a [map] bbcode string, the button o
 
 You can update one or all of maps when the content of divs is updated, using `window.updateMapBBCode()` function. Do not try to call it while a page is loading: it is initialized after all bbcodes are turned into maps.
 
-See an extended example of using the loader in [example.html](example.html).
+See an extended example of using the loader in [example.html](example.html) (run `make download` to get a copy of MapBBCode library for it).
 
 ## Embedding in a forum or blog
 
