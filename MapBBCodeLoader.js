@@ -247,7 +247,8 @@ window.mapBBCodeLoaderOptions = {
 		var path = options.path || '.';
 		if( path.substring(path.length - 1) !== '/' )
 			path += '/';
-		options.mapBBCodeOptions.windowPath = path;
+		if( !('windowPath' in options.mapBBCodeOptions) )
+			options.mapBBCodeOptions.windowPath = path;
 
 		appendFile(path + 'leaflet.css');
 		if( 'ActiveXObject' in window && !document.addEventListener ) // ie8, to remove for leaflet 0.7
