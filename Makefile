@@ -1,6 +1,7 @@
 MapBBCodeLoader.min.js: MapBBCodeLoader.js
 	jshint MapBBCodeLoader.js
-	uglifyjs MapBBCodeLoader.js -m -c -o MapBBCodeLoader.min.js
+	head -n 18  MapBBCodeLoader.js | uglifyjs - -b > MapBBCodeLoader.min.js
+	tail -n +18 MapBBCodeLoader.js | uglifyjs - -m -c >> MapBBCodeLoader.min.js
 
 download:
 	wget http://mapbbcode.org/dist/mapbbcode-latest.zip
