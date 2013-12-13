@@ -1,8 +1,8 @@
 /*
- * MapBBCode UI Loader.
- * A single script that, being included in a page, replaces all map bbcodes with maps.
- * And adds a map window opener to some buttons.
- * But first of all, it loads all Leaflet and MapBBCode scripts and stylesheets.
+ * MapBBCode Loader
+ *
+ * A single script that loads Leaflet and MapBBCode libraries (if needed),
+ * and then replaces all [map] bbcode with maps.
  */
 
 window.mapBBCodeLoaderOptions = {
@@ -13,15 +13,13 @@ window.mapBBCodeLoaderOptions = {
 	plain: false, // if true, converts plain bbcode to maps, otherwise only processes divs
 
 	mapBBCodeOptions: {},
-	processorOptions: {},
-	// note: only [] brackets are supported for plain codes and [mapid]!
+	processorOptions: {}
+};
 
-	set: function( options ) {
-		var opt;
-		for( opt in options ) {
-			if( options.hasOwnProperty(opt) && this.hasOwnProperty(opt) )
-				this[opt] = options[opt];
-		}
+window.mapBBCodeLoaderOptions.set = function( options ) {
+	for( var opt in options ) {
+		if( options.hasOwnProperty(opt) && this.hasOwnProperty(opt) )
+			this[opt] = options[opt];
 	}
 };
 
