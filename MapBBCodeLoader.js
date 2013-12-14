@@ -20,7 +20,12 @@ window.mapBBCodeLoaderOptions = {
 
 window.mapBBCodeLoaderOptions.set = function( options ) {
 	for( var opt in options ) {
-		if( options.hasOwnProperty(opt) )
+		if( opt === 'mapBBCodeOptions' ) {
+			var mapOpt = options[opt], opt1;
+			for( opt1 in mapOpt )
+				if( mapOpt.hasOwnProperty(opt1) )
+					this[opt][opt1] = mapOpt[opt1];
+		} else if( options.hasOwnProperty(opt) )
 			this[opt] = options[opt];
 	}
 };

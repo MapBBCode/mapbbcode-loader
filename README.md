@@ -51,7 +51,7 @@ With this configuration script, Leaflet and MapBBCode libraries will be loaded f
 | processorOptions | Object | `{}` | Options for MapBBCodeProcessor object constructor.
 | onload | Function | *none* | Callback function, which takes a single argument: MapBBCode instance.
 
-To set some of those options, use `set()` method with an object as a sole parameter.
+To set some of those options, use `set()` method with an object as a sole parameter. You can also set them inside `MapBBCodeLoader.min.js`, so that there won't be any extra script code in a template.
 
 Now let's make a MapBBCode editor:
 
