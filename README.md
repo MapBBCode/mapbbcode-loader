@@ -42,6 +42,7 @@ With this configuration script, Leaflet and MapBBCode libraries will be loaded f
 |---|---|---|---
 | path | String | `'mapbbcode/'` | Path to Leaflet and MapBBCode libraries.
 | plain | Boolean | `false` | Whether to convert plain-text bbcode, or just code enclosed in `<div>` tags with relevant classes.
+| force | Boolean | `false` | If `true`, loads MapBBCode libraries unconditionally.
 | language | String | `''` | MapBBCode language. Should be equal to i18n file name without '.js'.
 | proprietary | String[] | `[]` | List of proprietary layer files (without paths and '.js').
 | addons | String[] | `[]` | List of additional scripts to include (with '.js' extensions).

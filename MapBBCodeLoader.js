@@ -11,6 +11,7 @@ window.mapBBCodeLoaderOptions = {
 	addons: [], // array of strings for addons (paths to js files relative to mapbbcode path)
 	proprietary: [], // array of proprietary layer names (without js)
 	plain: false, // if true, converts plain bbcode to maps, otherwise only processes divs
+	force: false, // load libraries regardless of presence of bbcode
 
 	mapBBCodeOptions: {},
 	processorOptions: {}
@@ -227,11 +228,6 @@ window.mapBBCodeLoaderOptions.set = function( options ) {
 	var initialized = false;
 
 	function init() {
-		// if there are no maps on page, do not do anything
-		var found = false;
-		eachMap(document, function() { found = true; return true; }); // find the first map
-		if( !found ) return;
-
 		// prevent double initialization
 		if( initialized || 'MapBBCode' in window ) {
 			if( 'updateMapBBCode' in window )
@@ -240,8 +236,15 @@ window.mapBBCodeLoaderOptions.set = function( options ) {
 		}
 		initialized = true;
 
-		// add css and scripts
 		var options = window.mapBBCodeLoaderOptions;
+		if( !options.force ) {
+			// if there are no maps on page, do not do anything
+			var found = false;
+			eachMap(document, function() { found = true; return true; }); // find the first map
+			if( !found ) return;
+		}
+
+		// add css and scripts
 		var path = options.path || '.';
 		if( path.substring(path.length - 1) !== '/' )
 			path += '/';
