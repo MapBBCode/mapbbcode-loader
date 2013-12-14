@@ -41,6 +41,7 @@ With this configuration script, Leaflet and MapBBCode libraries will be loaded f
 | Option | Type | Default | Description
 |---|---|---|---
 | path | String | `'mapbbcode/'` | Path to Leaflet and MapBBCode libraries.
+| draw | Boolean | `false` | Whether to load Leaflet.draw library.
 | plain | Boolean | `false` | Whether to convert plain-text bbcode, or just code enclosed in `<div>` tags with relevant classes.
 | force | Boolean | `false` | If `true`, loads MapBBCode libraries unconditionally.
 | language | String | `''` | MapBBCode language. Should be equal to i18n file name without '.js'.
@@ -48,6 +49,7 @@ With this configuration script, Leaflet and MapBBCode libraries will be loaded f
 | addons | String[] | `[]` | List of additional scripts to include (with '.js' extensions).
 | mapBBCodeOptions | Object | `{}` | Options for MapBBCode object constructor.
 | processorOptions | Object | `{}` | Options for MapBBCodeProcessor object constructor.
+| onload | Function | *none* | Callback function, which takes a single argument: MapBBCode instance.
 
 To set some of those options, use `set()` method with an object as a sole parameter.
 
@@ -61,6 +63,8 @@ Now let's make a MapBBCode editor:
 When a cursor in a textarea is placed inside a [map] bbcode string, the button opens an editing window for that code, empty otherwise. When "Apply" button is clicked in that window, updated code is inserted at the cursor's location. As you can see, the button and the textarea are linked with `target_id` attribute.
 
 You can update one or all of maps when the content of divs is updated, using `window.updateMapBBCode()` function. Do not try to call it while a page is loading: it is initialized after all bbcodes are turned into maps.
+
+It is recommended to use `mapbbcode-window.html` from this repository with the loader, instead of the standard one: it uses the loader, and copies its settings from a parent window. Use `mapBBCodeOptions.windowPath` setting for that.
 
 See an extended example of using the loader in [example.html](example.html) (run `make download` to get a copy of MapBBCode library for it).
 

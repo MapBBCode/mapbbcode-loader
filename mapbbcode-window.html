@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>MapBBCode Editor</title>
+<meta charset="utf-8">
+<script type="text/javascript" src="MapBBCodeLoader.js"></script>
+<style>html, body, #edit, .leaflet-container { margin: 0; height: 100%; }</style>
+</head>
+<body>
+<div id="edit"></div>
+<script>
+<!--
+mapBBCodeLoaderOptions.set(opener.mapBBCodeLoaderOptions);
+mapBBCodeLoaderOptions.set({
+	force: true,
+	draw: true,
+	onload: function(mapBB) {
+		var stored = opener.storedMapBB;
+		mapBB.options.editorHeight = 0;
+		mapBB.options.editorCloseButtons = true;
+		mapBB.editor('edit', stored.bbcode, function(res) {
+			window.close();
+			if( stored.callback )
+				stored.callback.call(stored.context, res);
+			opener.storedMapBB = null;
+		}, this);
+	}
+});
+// -->
+</script>
+</body>
+</html>

@@ -12,6 +12,7 @@ window.mapBBCodeLoaderOptions = {
 	proprietary: [], // array of proprietary layer names (without js)
 	plain: false, // if true, converts plain bbcode to maps, otherwise only processes divs
 	force: false, // load libraries regardless of presence of bbcode
+	draw: false, // load Leaflet.draw library
 
 	mapBBCodeOptions: {},
 	processorOptions: {}
@@ -19,7 +20,7 @@ window.mapBBCodeLoaderOptions = {
 
 window.mapBBCodeLoaderOptions.set = function( options ) {
 	for( var opt in options ) {
-		if( options.hasOwnProperty(opt) && this.hasOwnProperty(opt) )
+		if( options.hasOwnProperty(opt) )
 			this[opt] = options[opt];
 	}
 };
@@ -256,7 +257,11 @@ window.mapBBCodeLoaderOptions.set = function( options ) {
 			appendFile(path + 'leaflet.ie.css');
 
 		appendFile(path + 'leaflet.js', function() {
-			// note that we don't include leaflet.draw.js - it is not needed
+			if( options.draw ) {
+				appendFile(path + 'leaflet.draw.css');
+				// not including .ie.css, because 1.2 won't have that
+				appendFile(path + 'leaflet.draw.js');
+			}
 			appendFile(path + 'mapbbcode.js', function() {
 				var i, lang = normalizeName(options.language, true);
 				if( lang && lang.length > 1 )
@@ -309,6 +314,9 @@ window.mapBBCodeLoaderOptions.set = function( options ) {
 		window._mapBBCode = new window.MapBBCode(options.mapBBCodeOptions);
 		window.updateMapBBCode = update;
 		update();
+
+		if( options.onload )
+			options.onload(window._mapBBCode);
 	}
 
 	// process the page only after it has finished loading
