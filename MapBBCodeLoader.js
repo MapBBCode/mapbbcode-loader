@@ -163,7 +163,7 @@ window.mapBBCodeLoaderOptions.set = function( options ) {
 		}
 
 		// <input type="button" class="mapbbcode_edit" target_id="..." />
-		buttons = findByClass(root, 'mapbbcode_edit', ['INPUT', 'BUTTON']);
+		buttons = findByClass(root, 'mapbbcode_edit', ['INPUT', 'BUTTON', 'A']);
 		for( i = 0; i < buttons.length; i++ ) {
 			var targetEl;
 			if( buttons[i].getAttribute('target_id') )
@@ -273,21 +273,14 @@ window.mapBBCodeLoaderOptions.set = function( options ) {
 		});
 	}
 
-	// on IE8 there is no addEventListener
-	function addListener( obj, name, listener ) {
-		if( obj.addEventListener )
-			obj.addEventListener(name, listener, false);
-		else if( obj.attachEvent )
-			obj.attachEvent('on' + name, listener);
-	}
-
 	// actually replace bbcodes with maps. Can be called with a root element
 	function update( root ) {
 		eachMap(root || document, function(c) {
 			var mapBBCode = window._mapBBCode;
 			if( c.button ) {
-				addListener(c.element, 'click', function() {
+				window.L.DomEvent.on(c.element, 'click', function(e) {
 					mapBBCode.editorWindow(c.target);
+					return window.L.DomEvent.stop(e);
 				});
 			} else if( !c.shared ) {
 				mapBBCode.show(c.element);
