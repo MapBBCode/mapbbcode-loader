@@ -183,21 +183,13 @@ window.mapBBCodeLoaderOptions.set = function( options ) {
 	}
 
 	// fixes script case to "Ulower", also expands language name
-	function normalizeName( name, expandLanguage ) {
+	function normalizeName( name ) {
 		if( !name || !name.length )
 			return name;
 		name = name.replace(/^\s+|\s+$/g, '').replace(/\.js$/, '');
 		if( name.length <= 1 )
 			return name.toUpperCase();
-		name = name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase();
-		if( expandLanguage ) {
-			var first2 = name.substring(0, 2);
-			if( first2 == 'En' )
-				name = 'English';
-			else if( first2 == 'Ru' )
-				name = 'Russian';
-		}
-		return name;
+		return name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase();
 	}
 
 	var loadingCount = 0, // number of scripts currently loading
@@ -258,17 +250,13 @@ window.mapBBCodeLoaderOptions.set = function( options ) {
 			options.mapBBCodeOptions.windowPath = path;
 
 		appendFile(path + 'leaflet.css');
-		if( 'ActiveXObject' in window && !document.addEventListener ) // ie8, to remove for leaflet 0.7
-			appendFile(path + 'leaflet.ie.css');
-
 		appendFile(path + 'leaflet.js', function() {
 			if( options.draw ) {
 				appendFile(path + 'leaflet.draw.css');
-				// not including .ie.css, because 1.2 won't have that
 				appendFile(path + 'leaflet.draw.js');
 			}
 			appendFile(path + 'mapbbcode.js', function() {
-				var i, lang = normalizeName(options.language, true);
+				var i, lang = options.language.substring(0, 2).toLowerCase();
 				if( lang && lang.length > 1 )
 					appendFile(path + 'lang/' + lang + '.js');
 				if( options.proprietary.length > 0 || options.mapBBCodeOptions.layers ) {
