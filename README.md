@@ -64,7 +64,7 @@ When a cursor in a textarea is placed inside a [map] bbcode string, the button o
 
 You can update one or all of maps when the content of divs is updated, using `window.updateMapBBCode()` function. Do not try to call it while a page is loading: it is initialized after all bbcodes are turned into maps.
 
-It is recommended to use `mapbbcode-window.html` from this repository with the loader, instead of the standard one: it uses the loader, and copies its settings from a parent window. Use `mapBBCodeOptions.windowPath` setting for that.
+It is recommended to use `mapbbcode-window.html` from this repository with the loader, instead of the standard one: it uses the loader, and copies its settings from a parent window. Use `mapBBCodeOptions.windowPath` setting for that. If you use a relative path in `path` option, you might need to set `windowRelPath` option with the path relative to `mapbbcode-window.html` file (often `"."`).
 
 See an extended example of using the loader in [example.html](example.html) (run `make download` to get a copy of MapBBCode library for it).
 
