@@ -11,6 +11,8 @@
 <script>
 <!--
 mapBBCodeLoaderOptions.set(opener.mapBBCodeLoaderOptions);
+if( mapBBCodeLoaderOptions.windowRelPath )
+	mapBBCodeLoaderOptions.set({ path: mapBBCodeLoaderOptions.windowRelPath });
 mapBBCodeLoaderOptions.set({
 	force: true,
 	draw: true,
