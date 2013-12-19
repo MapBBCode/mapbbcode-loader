@@ -10,10 +10,22 @@
 <div id="edit"></div>
 <script>
 <!--
-mapBBCodeLoaderOptions.set(opener.mapBBCodeLoaderOptions);
-if( mapBBCodeLoaderOptions.windowRelPath )
-	mapBBCodeLoaderOptions.set({ path: mapBBCodeLoaderOptions.windowRelPath });
-mapBBCodeLoaderOptions.set({
+var lopt = mapBBCodeLoaderOptions;
+lopt.set(opener.mapBBCodeLoaderOptions);
+
+var path;
+if( lopt.pathInWindow )
+	path = lopt.pathInWindow;
+else if( /^([a-z]:)?\//.match(lopt.path) )
+	path = lopt.path;
+else if( lopt.path === lopt.mapBBCodeOptions.windowPath )
+	path = './';
+else {
+	// todo: derive path from relative lopt.path and lopt.mapBBCodeOptions.windowPath
+}
+
+lopt.set({
+	path: path,
 	force: true,
 	draw: true,
 	onload: function(mapBB) {
