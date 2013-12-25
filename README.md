@@ -2,6 +2,8 @@
 
 This small script (under 5KB) includes MapBBCode libraries and additional files, replaces all [map] bbcode and external maps code with maps, and adds `onclick` listener to specially marked buttons, which open map editor. If there are no map codes on a page, it does nothing. Basically it is the universal MapBBCode plugin, which can be employed even when you have no source to your forum or blog engine.
 
+The loader is available from jsDelivr CDN: `//cdn.jsdelivr.net/mapbbcode-loader/1.2.0/MapBBCodeLoader.js` (change version number for a more recent MapBBCode library).
+
 ## Getting started
 
 The smallest page to include maps is this (replace map bbcode as needed):
